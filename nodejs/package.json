@@ -1,6 +1,6 @@
 {
   "name": "sqlite3-incremental-backup",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "The Utility to Backup SQLite3 Database incrementally",
   "main": "sqlite3-incremental-backup.mjs",
   "scripts": {
@@ -20,5 +20,5 @@
   "bugs": {
     "url": "https://github.com/nokibsarkar/sqlite3-incremental-backup/issues"
   },
-  "homepage": "https://github.com/nokibsarkar/sqlite3-incremental-backup/nodejs#readme"
+  "homepage": "https://github.com/nokibsarkar/sqlite3-incremental-backup/#readme"
 }
