@@ -1,5 +1,8 @@
 # sqlite3-incremental-backup
 This Module can be used to incrementally backup your database which will reduce the needed Backup size.
+# Installation
+For Installation Please Use `npm` command as follows:
+```npm install sqlite3-incremental-backup```
 # Example
 For Simple use case, use as follows :
 ```
