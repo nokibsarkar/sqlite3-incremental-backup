@@ -1,0 +1,24 @@
+{
+  "name": "sqlite3-incremental-backup",
+  "version": "1.0.2",
+  "description": "The Utility to Backup SQLite3 Database incrementally",
+  "main": "sqlite3-incremental-backup.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nokibsarkar/sqlite3-incremental-backup.git"
+  },
+  "keywords": [
+    "SQLite3",
+    "Incremental",
+    "Backup"
+  ],
+  "author": "Nokib Sarkar <nokibsarkar@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/nokibsarkar/sqlite3-incremental-backup/issues"
+  },
+  "homepage": "https://github.com/nokibsarkar/sqlite3-incremental-backup/nodejs#readme"
+}
