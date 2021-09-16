@@ -31,8 +31,6 @@ function backup(content, pageSize, pageCount, currentSnapshotName = 'snapshot3.t
     // Now The `filenames` Contains location of the file which contain the Current State of specified page of the Database
     fs.writeFileSync(currentSnapshotName, filenames.join('\n'));
 }
-
-backup(content, pageSize, pageCounter);
 function restore(snapshot='snapshot.txt', target='backup.db'){
     console.log('---> Restoration started from <--- ', snapshot)
     let sources = fs.readFileSync(snapshot, {encoding:'utf-8'}).split('\n');
@@ -47,4 +45,4 @@ function restore(snapshot='snapshot.txt', target='backup.db'){
     fs.writeFileSync(target, buf);
     console.log('---> Restored Successfully to ---> ', target);
 }
-module.exports = restore
+module.exports = {restore : restore, backup : backup}
