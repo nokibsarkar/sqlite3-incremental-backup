@@ -8,7 +8,7 @@
  * For Restoration use the function `restore('<Snap shot name>', '<Target file>')`S
  */
 
-import { readFileSync, open, mkdirSync, writeFileSync } from 'fs';
+import { readFileSync, open, mkdirSync, writeFileSync, openSync } from 'fs';
 import { createHash } from 'crypto';
 
 /**
@@ -16,11 +16,15 @@ import { createHash } from 'crypto';
  * @param {String} file The Input File name of the database which should be backed up. ***PLEASE USE AN UNIQUE FILENAME FOR EACH BACKUP***. Defaults to `snapshot.txt`.
  * @param {String} currentSnapshotName The name of the Current SnapShot name. This file contains the references to the actual pages
  * @param {String} objDir The Directory Where All the objects will be generated. The script must have right permission to that folder. For consistency, please use the same Directory where the previous call of the API generated. Otherwise it would not be useful at all. It defaults to `objects/`
- */
-function backup(
+ * @param {CallableFunction} callback A callback function which will be called after the successful backup. All the arguments after this parameter will be passed to `callback` function
+*/
+async function backup(
     file,
     currentSnapshotName = 'snapshot.txt',
-    objDir = 'objects/') {
+    objDir = 'objects/',
+    callback = null,
+    ...args
+    ) {
     const content = readFileSync(file);
     const HEADER_LENGTH = 100;
     const header = Buffer.alloc(HEADER_LENGTH);
@@ -37,7 +41,7 @@ function backup(
         const fileDir = objDir + hash[0] + hash[1] //First Two Charecter
         const fileName = hash.substring(2) // The Rest of the Charecters
         const fileDest = `${fileDir}/${fileName}`;
-        open(fileDest, 'w', function (err) {
+        await open(fileDest, 'w', function (err) {
             if (err && err.code == 'ENOENT') {
                 //Directory not exists
                 //Make the Directory
@@ -49,17 +53,20 @@ function backup(
     };
     // Now The `filenames` Contains location of the file which contain the Current State of specified page of the Database
     writeFileSync(currentSnapshotName, filenames.join('\n'));
+    callback && callback(...args)
 };
 /**
- * Th Function to restore the database from `snapshot`. Please ***DO NOT*** alter the foder structure which was used to backup specifically, do not modify the folder where all the object file resides. The database will be restored and saved into the filename given by the parameter `target`.
+ * This Function to restore the database from `snapshot`. Please ***DO NOT*** alter the foder structure which was used to backup specifically, do not modify the folder where all the object file resides. The database will be restored and saved into the filename given by the parameter `target`.
  * @param {String} snapshot The filename of the snapshot from which you want to restore the database. If resides in different database, please use the full path.
  * @param {String} target The name of the file where the database will be restored. If there is an existing database having the same name, the previous database will be destroyed and the database from current snapshot will overwrite the content. 
+ * @param {CallableFunction} callback A callback function which will be called after the successful restoration. All the arguments after this parameter will be passed to `callback` function
  */
-function restore(snapshot = 'snapshot.txt', target = 'backup.db') {
+async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback = null, ...args) {
     console.log('---> Restoration started from <--- ', snapshot)
     let sources = readFileSync(snapshot, { encoding: 'utf-8' }).split('\n');
     let chunks = [];
     sources.forEach(location => {
+        if(!location) return; // No file was defined
         let chunk = readFileSync(location);
         console.log('\t--->', location, chunk.length)
         chunks.push(chunk)
@@ -68,6 +75,6 @@ function restore(snapshot = 'snapshot.txt', target = 'backup.db') {
     const buf = Buffer.concat(chunks)
     writeFileSync(target, buf);
     console.log('---> Restored Successfully to ---> ', target);
+    callback && callback(...args)
 }
-export const restore = restore;
-export const backup = backup;
+export {backup, restore}
