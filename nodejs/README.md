@@ -13,4 +13,4 @@ const snapshotName = 'snapshot1.txt'; //Can be any arbitrary name. MUST BE UNIQU
 backup(srcFile, snapshotName); // For Backup
 restore(snapshotName, targetFile); // For Restoration
 ```
-*Note : Both `backup` and `restore` functions are asynchronous. For using Synchronously, Please use `await` keyword.*
+*Note : Both `backup` and `restore` functions are asynchronous.*
