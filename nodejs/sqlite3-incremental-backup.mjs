@@ -77,4 +77,5 @@ async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback
     console.log('---> Restored Successfully to ---> ', target);
     callback && callback(...args)
 }
+
 export {backup, restore}
