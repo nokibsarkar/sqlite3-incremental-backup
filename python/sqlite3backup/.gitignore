@@ -1,3 +1,6 @@
 objects
 *.txt
 *.db
+build
+dist
+__pycache__
