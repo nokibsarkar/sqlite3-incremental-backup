@@ -63,6 +63,3 @@ def restore(db_file : str, backup_file_name : str, object_dir : str = 'objects')
             with open(path, "rb") as file_object:
                 db_file_object.write(file_object.read())
     # Restoration is complete.
-
-backup('source.db')
-restore('target.db', 'backup.txt')
