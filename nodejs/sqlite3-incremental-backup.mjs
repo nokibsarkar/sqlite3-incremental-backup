@@ -8,7 +8,7 @@
  * For Restoration use the function `restore('<Snap shot name>', '<Target file>')`S
  */
 
-import { readFileSync, open, mkdirSync, writeFileSync, openSync } from 'fs';
+import { readFileSync, mkdirSync, writeFileSync, createReadStream, createWriteStream, existsSync } from 'fs';
 import { createHash } from 'crypto';
 
 /**
@@ -24,36 +24,37 @@ async function backup(
     objDir = 'objects/',
     callback = null,
     ...args
-    ) {
-    const content = readFileSync(file);
+) {
     const HEADER_LENGTH = 100;
-    const header = Buffer.alloc(HEADER_LENGTH);
-    content.copy(header, 0, 0, HEADER_LENGTH);
-    const pageSize = header.readInt16LE(16) * 256;
-    const pageCount = header.readInt32BE(28);
-
-    let filenames = [];
-    for (let i = 0; i < pageCount; i++) {
-        const pageStartIndex = pageSize * i;
-        const pageEndIndex = pageStartIndex + pageSize;
-        const pageContent = content.subarray(pageStartIndex, pageEndIndex);
-        const hash = createHash('sha256').update(pageContent).digest('hex');
-        const fileDir = objDir + hash[0] + hash[1] //First Two Charecter
-        const fileName = hash.substring(2) // The Rest of the Charecters
-        const fileDest = `${fileDir}/${fileName}`;
-        await open(fileDest, 'w', function (err) {
-            if (err && err.code == 'ENOENT') {
-                //Directory not exists
-                //Make the Directory
-                mkdirSync(fileDir, { recursive: true });
+    // Read only the first 100 bytes of the file using readStream
+    const readStream = createReadStream(file, { start: 0, end: HEADER_LENGTH });
+    readStream.on('data', (header) => {
+        // The whole body here
+        const pageSize = header.readInt16LE(16) * 256;
+        const pageCount = header.readInt32BE(28);
+        const dbFile = createReadStream(file, { highWaterMark: pageSize });
+        let filenames = [];
+        dbFile.on(
+            'data',
+            (pageContent) => {
+                const hash = createHash('sha256').update(pageContent).digest('hex');
+                const fileDir = objDir + hash[0] + hash[1] //First Two Charecter
+                const fileName = hash.substring(2) // The Rest of the Charecters
+                const fileDest = `${fileDir}/${fileName}`;
+                if (!existsSync(fileDir)) {
+                    mkdirSync(fileDir, { recursive: true });
+                }
+                writeFileSync(fileDest, pageContent);
+                filenames.push(fileDest)
             }
-            writeFileSync(fileDest, pageContent);
+        )
+        dbFile.on('end', () => {
+            console.log('--->', file, 'Backed up Successfully to ---> ', currentSnapshotName)
+            // Now The `filenames` Contains location of the file which contain the Current State of specified page of the Database
+            writeFileSync(currentSnapshotName, filenames.join('\n'));
+            callback && callback(...args)
         })
-        filenames.push(fileDest)
-    };
-    // Now The `filenames` Contains location of the file which contain the Current State of specified page of the Database
-    writeFileSync(currentSnapshotName, filenames.join('\n'));
-    callback && callback(...args)
+    });
 };
 /**
  * This Function to restore the database from `snapshot`. Please ***DO NOT*** alter the foder structure which was used to backup specifically, do not modify the folder where all the object file resides. The database will be restored and saved into the filename given by the parameter `target`.
@@ -64,18 +65,26 @@ async function backup(
 async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback = null, ...args) {
     console.log('---> Restoration started from <--- ', snapshot)
     let sources = readFileSync(snapshot, { encoding: 'utf-8' }).split('\n');
-    let chunks = [];
-    sources.forEach(location => {
-        if(!location) return; // No file was defined
-        let chunk = readFileSync(location);
-        console.log('\t--->', location, chunk.length)
-        chunks.push(chunk)
-    });
-
-    const buf = Buffer.concat(chunks)
-    writeFileSync(target, buf);
-    console.log('---> Restored Successfully to ---> ', target);
-    callback && callback(...args)
+    const writer = createWriteStream(target, {autoClose: true});
+    writer.on(
+        'ready',
+        () => {
+            // The Writable is ready to write
+            sources.forEach(
+                (source) => {
+                    if (!source) return;
+                    let chunk = readFileSync(source);
+                    console.log('\t--->', source, chunk.length)
+                    writer.write(chunk);
+                })
+        }
+    )
+    writer.on(
+        'finish',
+        () => {
+            console.log('---> Restored Successfully to ---> ', target);
+            callback && callback(...args)
+    })
 }
 
-export {backup, restore}
+export { backup, restore }
