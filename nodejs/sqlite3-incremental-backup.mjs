@@ -76,11 +76,12 @@ async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback
                     let chunk = readFileSync(source);
                     console.log('\t--->', source, chunk.length)
                     writer.write(chunk);
-                })
+                });
+            writer.end();
         }
     )
     writer.on(
-        'finish',
+        'close',
         () => {
             console.log('---> Restored Successfully to ---> ', target);
             callback && callback(...args)
