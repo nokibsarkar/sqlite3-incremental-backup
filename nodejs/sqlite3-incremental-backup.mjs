@@ -20,12 +20,14 @@ import { createHash } from 'crypto';
 */
 async function backup(
     file,
-    currentSnapshotName = 'snapshot.txt',
+    currentSnapshotName = null,
     objDir = 'objects/',
     callback = null,
     ...args
 ) {
     const HEADER_LENGTH = 100;
+    if(!currentSnapshotName)
+        currentSnapshotName = `snapshot-${Date.now()}.txt`;
     // Read only the first 100 bytes of the file using readStream
     const readStream = createReadStream(file, { start: 0, end: HEADER_LENGTH });
     readStream.on('data', (header) => {
