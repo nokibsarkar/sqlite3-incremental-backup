@@ -1,7 +1,6 @@
 node_modules
 *.html
 *.db*
-test*
 snapshot*
 objects/*
 *.py
