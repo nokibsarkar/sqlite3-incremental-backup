@@ -1,6 +1,6 @@
 {
   "name": "sqlite3-incremental-backup",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "The Utility to Backup SQLite3 Database incrementally",
   "main": "sqlite3-incremental-backup.mjs",
   "scripts": {
