@@ -9,7 +9,7 @@ Refer to [Nodejs Documentation](https://github.com/nokibsarkar/sqlite3-increment
 
 """
 
-__version__ = "1.0.0" # major.minor.patch
+__version__ = "2.0.0" # major.minor.patch
 _author__ = "Nazmul Haque Naqib <nokibsarkar@gmail.com>"
 SQLITE_PAGE_SIZE_INDEX = 16
 SQLITE_HEADER_LENGTH = 16
