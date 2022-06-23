@@ -58,6 +58,7 @@ async function backup(
             callback && callback(...args)
         })
     });
+    return currentSnapshotName
 };
 /**
  * This Function to restore the database from `snapshot`. Please ***DO NOT*** alter the foder structure which was used to backup specifically, do not modify the folder where all the object file resides. The database will be restored and saved into the filename given by the parameter `target`.

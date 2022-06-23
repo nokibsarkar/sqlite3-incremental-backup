@@ -51,6 +51,7 @@ def backup(db_file, current_snapshot_name : str = None, object_dir : str = 'obje
     # Write the pages to the object directory.
     with open(current_snapshot_name, 'w') as fp:
         fp.write('\n'.join(pages))
+    return current_snapshot_name
 """
 The restoration function is used to restore a SQLite database from a backup file.
 """
