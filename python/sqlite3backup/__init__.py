@@ -14,9 +14,9 @@ _author__ = "Nazmul Haque Naqib <nokibsarkar@gmail.com>"
 SQLITE_PAGE_SIZE_INDEX = 16
 SQLITE_HEADER_LENGTH = 16
 SQLITE_PAGE_COUNT_INDEX = 28
-import os
+import os, datetime
 from hashlib import sha256
-def backup(db_file, object_dir = 'objects', backup_file_name='backup.txt'):
+def backup(db_file, current_snapshot_name : str = None, object_dir : str = 'objects/',):
     """
     This function is used to backup a SQLite database incrementally.
     :param db_file: The path to the source SQLite database.
@@ -24,7 +24,9 @@ def backup(db_file, object_dir = 'objects', backup_file_name='backup.txt'):
     :param block_size: The block size to use for the backup.
     :return: None
     """
-
+    if current_snapshot_name == None:
+        print("No Snapshot name provided, generating a new snapshot name.")
+        current_snapshot_name = f"snapshopt-{datetime.datetime.utcnow()}.txt"
     page_size = 0
     # Open the database.
     with open(db_file, "rb") as db_file_object:
@@ -47,12 +49,12 @@ def backup(db_file, object_dir = 'objects', backup_file_name='backup.txt'):
                     file_object.write(page)
             pages.append(hash)
     # Write the pages to the object directory.
-    with open(backup_file_name, 'w') as fp:
+    with open(current_snapshot_name, 'w') as fp:
         fp.write('\n'.join(pages))
 """
 The restoration function is used to restore a SQLite database from a backup file.
 """
-def restore(db_file : str, backup_file_name : str, object_dir : str = 'objects'):
+def restore(snapshot : str, target : str,  object_dir : str = 'objects'):
     """
     This function is used to restore a SQLite database from a backup file.
     :param db_file: The path to the target SQLite database.
@@ -61,10 +63,10 @@ def restore(db_file : str, backup_file_name : str, object_dir : str = 'objects')
     :return: None
     """
     # Read the pages from the backup file.
-    with open(backup_file_name, 'r') as fp:
+    with open(snapshot, 'r') as fp:
         pages = fp.read().split('\n')
     # Open the database.
-    with open(db_file, "wb") as db_file_object:
+    with open(target, "wb") as db_file_object:
         # Iterate thourgh the pages and write them to the database.
         for page in pages:
             path = os.path.join(object_dir, page[:2], page[2:])

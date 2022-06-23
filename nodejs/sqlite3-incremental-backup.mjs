@@ -10,18 +10,18 @@
 
 import { readFileSync, mkdirSync, writeFileSync, createReadStream, createWriteStream, existsSync } from 'fs';
 import { createHash } from 'crypto';
-
+import path from 'path';
 /**
  * The Function to backup the Sqlite3 Database incrementally. For simple use case, just call this function as `backup('<Your Database File>')`. Refer to Documentation for more.
- * @param {String} file The Input File name of the database which should be backed up. ***PLEASE USE AN UNIQUE FILENAME FOR EACH BACKUP***. Defaults to `snapshot.txt`.
+ * @param {String} dbFile The Input File name of the database which should be backed up. ***PLEASE USE AN UNIQUE FILENAME FOR EACH BACKUP***. Defaults to `snapshot.txt`.
  * @param {String} currentSnapshotName The name of the Current SnapShot name. This file contains the references to the actual pages
- * @param {String} objDir The Directory Where All the objects will be generated. The script must have right permission to that folder. For consistency, please use the same Directory where the previous call of the API generated. Otherwise it would not be useful at all. It defaults to `objects/`
+ * @param {String} objectDir The Directory Where All the objects will be generated. The script must have right permission to that folder. For consistency, please use the same Directory where the previous call of the API generated. Otherwise it would not be useful at all. It defaults to `objects/`
  * @param {CallableFunction} callback A callback function which will be called after the successful backup. All the arguments after this parameter will be passed to `callback` function
 */
 async function backup(
-    file,
+    dbFile,
     currentSnapshotName = null,
-    objDir = 'objects/',
+    objectDir = 'objects/',
     callback = null,
     ...args
 ) {
@@ -29,29 +29,30 @@ async function backup(
     if(!currentSnapshotName)
         currentSnapshotName = `snapshot-${Date.now()}.txt`;
     // Read only the first 100 bytes of the file using readStream
-    const readStream = createReadStream(file, { start: 0, end: HEADER_LENGTH });
+    const readStream = createReadStream(dbFile, { start: 0, end: HEADER_LENGTH });
     readStream.on('data', (header) => {
         // The whole body here
         const pageSize = header.readInt16LE(16) * 256;
         const pageCount = header.readInt32BE(28);
-        const dbFile = createReadStream(file, { highWaterMark: pageSize });
+        const dbFileObject = createReadStream(dbFile, { highWaterMark: pageSize });
         let filenames = [];
-        dbFile.on(
+        dbFileObject.on(
             'data',
             (pageContent) => {
                 const hash = createHash('sha256').update(pageContent).digest('hex');
-                const fileDir = objDir + hash[0] + hash[1] //First Two Charecter
+                const fileDir = hash[0] + hash[1] //First Two Charecter
                 const fileName = hash.substring(2) // The Rest of the Charecters
-                const fileDest = `${fileDir}/${fileName}`;
-                if (!existsSync(fileDir)) {
-                    mkdirSync(fileDir, { recursive: true });
+                const destDir = path.join(objectDir, fileDir); // The directory where the file will be stored
+                const fileDest = path.join(destDir, fileName); // The ultimate filename
+                if (!existsSync(destDir)) {
+                    mkdirSync(destDir, { recursive: true });
                 }
                 writeFileSync(fileDest, pageContent);
-                filenames.push(fileDest)
+                filenames.push(fileDir + '/' + fileName); // It would exclude the objectDirectory
             }
         )
-        dbFile.on('end', () => {
-            console.log('--->', file, 'Backed up Successfully to ---> ', currentSnapshotName)
+        dbFileObject.on('end', () => {
+            console.log('--->', dbFile, 'Backed up Successfully to ---> ', currentSnapshotName)
             // Now The `filenames` Contains location of the file which contain the Current State of specified page of the Database
             writeFileSync(currentSnapshotName, filenames.join('\n'));
             callback && callback(...args)
@@ -64,7 +65,7 @@ async function backup(
  * @param {String} target The name of the file where the database will be restored. If there is an existing database having the same name, the previous database will be destroyed and the database from current snapshot will overwrite the content. 
  * @param {CallableFunction} callback A callback function which will be called after the successful restoration. All the arguments after this parameter will be passed to `callback` function
  */
-async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback = null, ...args) {
+async function restore(snapshot = 'snapshot.txt', target = 'backup.db', objectDir = "objects/", callback = null, ...args) {
     console.log('---> Restoration started from <--- ', snapshot)
     let sources = readFileSync(snapshot, { encoding: 'utf-8' }).split('\n');
     const writer = createWriteStream(target, {autoClose: true});
@@ -75,6 +76,9 @@ async function restore(snapshot = 'snapshot.txt', target = 'backup.db', callback
             sources.forEach(
                 (source) => {
                     if (!source) return;
+                    // Source only contains the hash of the file
+                    // with the object directory, so, add that object directory
+                    source = path.join(objectDir , source);
                     let chunk = readFileSync(source);
                     console.log('\t--->', source, chunk.length)
                     writer.write(chunk);
