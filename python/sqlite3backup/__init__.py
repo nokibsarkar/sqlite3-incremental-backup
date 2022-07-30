@@ -33,8 +33,10 @@ def backup(db_file, current_snapshot_name : str = None, object_dir : str = 'obje
         assert db_file_object.read(SQLITE_HEADER_LENGTH) == b"SQLite format 3\x00"
         db_file_object.seek(SQLITE_PAGE_SIZE_INDEX, os.SEEK_SET)
         page_size = int.from_bytes(db_file_object.read(2), 'little') * 256
+        
         db_file_object.seek(SQLITE_PAGE_COUNT_INDEX, os.SEEK_SET)
         page_count = int.from_bytes(db_file_object.read(4), 'big')
+        print(f"Page Count : {page_count}")
     pages = []
     with open(db_file, "rb") as db_file_object:
         for page_number in range(page_count):

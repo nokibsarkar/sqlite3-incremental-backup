@@ -2,7 +2,6 @@
 This file would generate a random SQLite3 database and then backup it.
 """
 import random, sqlite3, sys
-SOURCE_DATABASE_NAME = sys.argv[1]
 def generate_database(target_file):
     print("Generating the test sqlite3 database : " + target_file)
     with sqlite3.connect(target_file) as db:
@@ -17,6 +16,7 @@ def generate_database(target_file):
 if __name__ == '__main__':
     generate_database("python/test.sqlite3")
     generate_database("nodejs/test.sqlite3")
+    generate_database("c/test.sqlite3")
 
     
 
