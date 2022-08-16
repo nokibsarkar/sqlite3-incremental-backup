@@ -12,6 +12,7 @@ on:
 jobs:
   populate:
     runs-on: ubuntu-latest
+    - uses: actions/checkout@v3
     steps:
     - run: python3 generate_database.py
   build:
@@ -24,7 +25,6 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
     - name: Test using python3 and nodejs
       uses: actions/setup-node@v3
       with:
