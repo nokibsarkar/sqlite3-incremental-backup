@@ -10,7 +10,7 @@ def generate_database(target_file):
         db.executemany(
             "INSERT INTO test (value) VALUES (?)",
             [
-                (str(random.randint(0, 100)),) for i in range(100000)
+                (str(random.randint(0, 100)),) for i in range(100)
             ]
         )
 if __name__ == '__main__':
