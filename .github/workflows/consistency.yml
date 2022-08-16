@@ -12,7 +12,8 @@ on:
 jobs:
   populate:
     runs-on: ubuntu-latest
-    steps: python3 generate_database.py
+    steps:
+    - run: python3 generate_database.py
   build:
     needs: [populate]
     runs-on: ubuntu-latest
