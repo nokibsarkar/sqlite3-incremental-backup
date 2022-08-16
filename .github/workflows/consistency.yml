@@ -10,8 +10,11 @@ on:
     branches: [ "main" ]
 
 jobs:
+  populate:
+    runs-on: ubuntu-latest
+    steps: python3 generate_database.py
   build:
-
+    needs: [populate]
     runs-on: ubuntu-latest
 
     strategy:
