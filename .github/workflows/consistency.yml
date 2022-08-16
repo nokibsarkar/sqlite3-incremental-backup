@@ -12,8 +12,8 @@ on:
 jobs:
   populate:
     runs-on: ubuntu-latest
-    - uses: actions/checkout@v3
     steps:
+    - uses: actions/checkout@v3
     - run: python3 generate_database.py
   build:
     needs: [populate]
