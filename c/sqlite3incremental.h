@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <stdlib.h>
+#include "hash.c"
 enum SQLITE3_I_ERROR {
     SQLITE_I_OK = 0,
     SQLITE_I_DB_NOT_OPEN,
@@ -96,11 +97,17 @@ int sqlite3_incremental_backup(char * dbFile, char * currentSnapshotName, char *
     char * content = (char *) malloc(page_size);
     char subdirectory[obj_dir_len + 3];
     for(int i = 0; i < page_count; i++){
+        SHA256_CTX ctx;
+        sha256_init(&ctx);
         // each page
         fread(content, 1, page_size, dbFileObject);
+        sha256_update(&ctx, content, page_size);
         // get the hash of the page
-        char hash[] = "b0406a68fc99c7db9553d7be36ce9e528684b82f76a0d8109b86b0e24c6c6240"; //(char *) malloc(hash_size * sizeof(char));
-        hash[3] = 'a' + i;
+        char * hash = (char *) malloc(hash_size * sizeof(char));
+        sha256_transform(&ctx, hash);
+        sha256_final(&ctx, hash);
+        
+        //printf("%s\n", hash);
         sprintf(objects[i], "%c%c/%s", hash[0], hash[1], &hash[2]);
         // the subdirectory where the content would reside
         sprintf(subdirectory, "%s%c%c/", objectDir, hash[0], hash[1]);
@@ -109,7 +116,7 @@ int sqlite3_incremental_backup(char * dbFile, char * currentSnapshotName, char *
         char file_name[obj_dir_len + hash_size + 3];
         sprintf(file_name, "%s%s", subdirectory, &hash[2]);
         #ifdef DEBUG
-        printf("Hash : %s\n", hash);
+        printf("Hash : %x%x\n", hash[0], hash[0]);
         printf("Subdirectory : %s\n", subdirectory);
         printf("File Name : %s\n", file_name);
         printf("------> %s\n", objects[i]);

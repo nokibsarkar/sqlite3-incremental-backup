@@ -10,13 +10,14 @@ def generate_database(target_file):
         db.executemany(
             "INSERT INTO test (value) VALUES (?)",
             [
-                (str(random.randint(0, 100)),) for i in range(10000)
+                (str(random.randint(0, 1000)),) for i in range(10000)
             ]
         )
 if __name__ == '__main__':
     generate_database("python/test.sqlite3")
     generate_database("nodejs/test.sqlite3")
     generate_database("c/test.sqlite3")
+    generate_database("java/test.sqlite3")
 
     
 
